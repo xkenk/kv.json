@@ -26,6 +26,64 @@ def fetch_remote_json(url):
         print(f"获取远程数据失败: {e}")
         sys.exit(1)
 
+def filter_premium(data):
+    """过滤掉group为premium的数据"""
+    print("正在过滤group为'premium'的数据...")
+    
+    if isinstance(data, list):
+        # 如果是数组，过滤掉group为premium的元素
+        original_count = len(data)
+        filtered = []
+        removed_count = 0
+        
+        for item in data:
+            if isinstance(item, dict):
+                # 检查是否有group字段且值为premium
+                if item.get('group') == 'premium':
+                    print(f"过滤掉元素: {item.get('name', '无名')} (group: premium)")
+                    removed_count += 1
+                    continue
+            filtered.append(item)
+        
+        print(f"数组过滤: 原始 {original_count} 条，过滤后 {len(filtered)} 条，移除了 {removed_count} 条")
+        return filtered
+        
+    elif isinstance(data, dict):
+        # 如果是字典，可能有不同的结构
+        if 'items' in data and isinstance(data['items'], list):
+            # 处理items数组
+            original_items = data['items']
+            filtered_items = []
+            removed_count = 0
+            
+            for item in original_items:
+                if isinstance(item, dict) and item.get('group') == 'premium':
+                    print(f"过滤掉item: {item.get('name', '无名')} (group: premium)")
+                    removed_count += 1
+                    continue
+                filtered_items.append(item)
+            
+            print(f"字典items过滤: 原始 {len(original_items)} 条，过滤后 {len(filtered_items)} 条，移除了 {removed_count} 条")
+            return {**data, 'items': filtered_items}
+            
+        else:
+            # 普通字典，尝试过滤掉group为premium的项
+            filtered = {}
+            removed_count = 0
+            
+            for key, value in data.items():
+                if isinstance(value, dict) and value.get('group') == 'premium':
+                    print(f"过滤掉键: {key} (group: premium)")
+                    removed_count += 1
+                    continue
+                filtered[key] = value
+            
+            print(f"字典过滤: 原始 {len(data)} 个键，过滤后 {len(filtered)} 个键，移除了 {removed_count} 个")
+            return filtered
+            
+    print(f"警告: 未知数据类型 {type(data)}，返回原数据")
+    return data
+
 def main():
     remote_url = "https://raw.githubusercontent.com/rapier15sapper/ew/refs/heads/main/test.json"
     kv_path = Path("kv.json")
